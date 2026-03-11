@@ -1,0 +1,45 @@
+Pipeline steps:
+
+1. Stations + ts metadata.
+
+EventBridge (every 30 days)
+  → Lambda: fetch_stations_metadata
+      GET /station.json → S3: raw/stations/ingested_date=YYYY-MM-DD/stations.json
+      GET /timeseries.json → S3: raw/timeseries/ingested_date=YYYY-MM-DD/timeseries.json
+      boto3: glue.start_workflow_run('stations_metadata_workflow')
+
+Glue Workflow: stations_metadata_workflow
+  → Glue Job: curate_stations
+      Input:  raw/stations/ingested_date=YYYY-MM-DD/
+      Output: curated/stations/stations.parquet
+      Logic:  select station_id, station_name, river
+
+  → Glue Job: curate_timeseries (triggered by curate_stations success)
+      Input:  raw/timeseries/ingested_date=YYYY-MM-DD/
+              curated/stations/stations.parquet
+      Output: curated/stations_ts/stations_ts.parquet
+      Logic:  join on station_id, select station_id, station_name, ts_id, ts_name
+    
+
+2. Levels data
+EventBridge (every 60 mins)
+  → Lambda: fetch_levels_raw
+      Read: curated/stations_ts/stations_ts.parquet (list of ts_ids)
+      GET /timeseries/{ts_id}/values.json for each ts_id
+      Output: raw/levels/ingested_date=YYYY-MM-DD/ingested_hour=HH/levels.json
+      boto3: glue.start_workflow_run('levels_workflow')
+
+Glue Workflow: levels_workflow
+  → Glue Job: curate_levels
+  → Glue Job: current_levels (on curate_levels success)
+
+3. Current levels view
+Glue Job: curate_levels (completion)
+  → Glue Job: current_levels
+        Input:  curated/levels/
+        Output: curated/current_levels/current_levels.parquet
+        Logic:  SELECT ts_id, station_id, station_name, river, value, timestamp
+                WHERE timestamp = MAX(timestamp) OVER (PARTITION BY ts_id)
+
+Glue Catalog: current_levels table
+  → Redshift Spectrum external table: current_levels
