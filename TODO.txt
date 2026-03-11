@@ -19,6 +19,17 @@ Glue Workflow: stations_metadata_workflow
               curated/stations/stations.parquet
       Output: curated/stations_ts/stations_ts.parquet
       Logic:  join on station_id, select station_id, station_name, ts_id, ts_name
+
+
+### Infra to create:
+[ ] fetch_stations_metadata Lambda
+[ ] raw/ S3 bucket
+[ ] stations_metadata_workflow Glue Workflow
+[ ] curate_stations glue Job
+[ ] curate_timeseries glue job 
+[ ] curated/ S3 bucket
+[ ] EventBridge schedule to trigger Lambda
+[ ] Glue catalog definitions: raw_stations, raw_timeseries, stations, stations)ts
     
 
 2. Levels data

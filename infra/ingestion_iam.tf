@@ -28,7 +28,9 @@ resource "aws_iam_policy" "lambda_stations_policy" {
           "s3:PutObject",
           "s3:PutObjectAcl"
         ]
-        Resource = "arn:aws:s3:::${var.raw_bucket}/raw/*"
+        Resource = [
+          "arn:aws:s3:::${var.raw_bucket}/raw/*"
+        ]
       },
 
       # --- Glue workflow trigger ---
