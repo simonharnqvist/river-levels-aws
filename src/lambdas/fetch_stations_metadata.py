@@ -45,9 +45,7 @@ def get_stations():
 
 def get_all_timeseries():
     url = (
-        "https://timeseries.sepa.org.uk/KiWIS/KiWIS"
-        "?service=kisters&datasource=0&type=queryServices"
-        "&request=getTimeseriesList"
+        BASE_URL + "&request=getTimeseriesList"
         "&parametertype_name=S"
         "&ts_name=15minute"
         "&format=json"

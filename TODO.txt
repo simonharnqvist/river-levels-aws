@@ -9,28 +9,25 @@ EventBridge (every 30 days)
       boto3: glue.start_workflow_run('stations_metadata_workflow')
 
 Glue Workflow: stations_metadata_workflow
-  → Glue Job: curate_stations
-      Input:  raw/stations/ingested_date=YYYY-MM-DD/
-      Output: curated/stations/stations.parquet
-      Logic:  select station_id, station_name, river
 
   → Glue Job: curate_timeseries (triggered by curate_stations success)
       Input:  raw/timeseries/ingested_date=YYYY-MM-DD/
-              curated/stations/stations.parquet
+              raw/stations/stations.parquet
       Output: curated/stations_ts/stations_ts.parquet
-      Logic:  join on station_id, select station_id, station_name, ts_id, ts_name
+      Logic:  join on station_id, select station_id, station_name, river_name, ts_id, ts_name
 
 
 ### Infra to create:
-[ ] fetch_stations_metadata Lambda
-[ ] raw/ S3 bucket
-[ ] stations_metadata_workflow Glue Workflow
-[ ] curate_stations glue Job
-[ ] curate_timeseries glue job 
-[ ] curated/ S3 bucket
-[ ] EventBridge schedule to trigger Lambda
-[ ] Glue catalog definitions: raw_stations, raw_timeseries, stations, stations)ts
-    
+[X] fetch_stations_metadata Lambda (TF + code)
+[X] raw/ S3 bucket
+[X] stations_metadata_workflow Glue Workflow
+[X] curate_stations glue Job
+[X] curate_timeseries glue job 
+[X] curated/ S3 bucket
+[X] EventBridge schedule to trigger Lambda
+[X] Glue catalog definitions: raw_stations, raw_timeseries, stations)ts
+
+Think about: data validation? Null ratio checks?
 
 2. Levels data
 EventBridge (every 60 mins)
